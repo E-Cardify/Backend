@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    "isolatedModules": true,
+
+    "checkJs": true,
+
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+
+    "outDir": "./dist"
+  },
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Strictest",
+  "_version": "2.0.0"
+}
