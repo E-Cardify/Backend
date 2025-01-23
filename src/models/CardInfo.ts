@@ -1,4 +1,4 @@
-import { InferSchemaType, Schema, model } from "mongoose";
+import { InferSchemaType, Schema, Types, model } from "mongoose";
 
 const InformationSchema = new Schema({
   firstName: {
@@ -71,6 +71,10 @@ const FieldSchema = new Schema({
 
 const CardInfoSchema = new Schema(
   {
+    _id: {
+      type: Types.ObjectId,
+      auto: true,
+    },
     information: {
       type: InformationSchema,
       required: true,
@@ -82,6 +86,10 @@ const CardInfoSchema = new Schema(
     fields: {
       type: [FieldSchema],
       default: [],
+    },
+    isMain: {
+      type: Boolean,
+      default: false,
     },
   },
   {

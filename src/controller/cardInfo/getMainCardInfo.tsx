@@ -1,15 +1,7 @@
-import express from "express";
-import getCardInfo from "../controller/cardInfo/getCardInfo";
-import createCard from "../controller/cardInfo/createCard";
-import getAllCardInfo from "../controller/cardInfo/getAllCardInfo";
-import updateCardInfo from "../controller/cardInfo/updateCardInfo";
 import { Request, Response } from "express";
-import CardInfo, { CardInfoType } from "../models/CardInfo";
+import CardInfo, { CardInfoType } from "../../models/CardInfo";
 
-const router = express.Router();
-
-router.get("/", getAllCardInfo);
-router.get("/main", async (_: Request, res: Response) => {
+const getMainCardInfo = async (_: Request, res: Response) => {
   try {
     const cardInfo = await CardInfo.findOne<CardInfoType>({
       isMain: true,
@@ -40,9 +32,6 @@ router.get("/main", async (_: Request, res: Response) => {
     res.sendStatus(500);
     return;
   }
-});
-router.get("/:id", getCardInfo);
-router.post("/create", createCard);
-router.put("/:id", updateCardInfo);
+};
 
-export default router;
+export default getMainCardInfo;
