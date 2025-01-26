@@ -2,7 +2,6 @@ import express from "express";
 import getCardInfo from "../controller/cardInfo/getCardInfo";
 import createCard from "../controller/cardInfo/createCard";
 import getAllCardInfo from "../controller/cardInfo/getAllCardInfo";
-import updateCardInfo from "../controller/cardInfo/updateCardInfo";
 import { Request, Response } from "express";
 import CardInfo, { CardInfoType } from "../models/CardInfo";
 
@@ -43,6 +42,5 @@ router.get("/main", async (_: Request, res: Response) => {
 });
 router.get("/:id", getCardInfo);
 router.post("/create", createCard);
-router.put("/:id", updateCardInfo);
 
 export default router;

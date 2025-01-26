@@ -67,6 +67,10 @@ const FieldSchema = new Schema({
     type: String,
     required: true,
   },
+  text: {
+    type: String,
+    default: "",
+  },
 });
 
 const CardInfoSchema = new Schema(
