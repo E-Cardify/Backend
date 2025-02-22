@@ -1,15 +1,46 @@
 import { Request, Response } from "express";
 import CardInfo, { CardInfoType } from "../../models/CardInfo";
+import jwt from "jsonwebtoken";
+import User from "../../models/User";
 
-const getMainCardInfo = async (_: Request, res: Response) => {
+const getMainCardInfo = async (req: Request, res: Response) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    res.sendStatus(401);
+    return;
+  }
+
+  const decoded = jwt.verify(
+    token,
+    process.env["JWT_SECRET"] || "default-secret"
+  ) as { userId: string };
+
+  const user = await User.findById(decoded.userId);
+
+  if (!user) {
+    res.sendStatus(401);
+    return;
+  }
   try {
-    const cardInfo = await CardInfo.findOne<CardInfoType>({
+    let cardInfo = await CardInfo.findOne<CardInfoType>({
       isMain: true,
+      _id: { $in: user.cards },
     });
 
     if (!cardInfo) {
-      res.sendStatus(404);
-      return;
+      if (user.cards.length === 0) {
+        res.sendStatus(404);
+        return;
+      }
+      const firstCard = await CardInfo.findById(user.cards[0]);
+      if (!firstCard) {
+        res.sendStatus(404);
+        return;
+      }
+      cardInfo = firstCard;
+      firstCard.isMain = true;
+      await firstCard.save();
     }
 
     const responseData = {

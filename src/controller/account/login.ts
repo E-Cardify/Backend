@@ -48,6 +48,7 @@ const login = async (req: Request, res: Response) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      _id: user.id,
     });
     return;
   } catch (err) {

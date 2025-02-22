@@ -95,6 +95,11 @@ const CardInfoSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   {
     timestamps: true,
