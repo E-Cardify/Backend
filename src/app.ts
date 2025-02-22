@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cardInfo from "./routes/cardInfo";
+import user from "./routes/user";
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/card-info", cardInfo);
+app.use("/api/v1/user", user);
 app.set("trust proxy", true);
 
 export default app;

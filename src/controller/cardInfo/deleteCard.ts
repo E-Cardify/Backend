@@ -16,6 +16,15 @@ const deleteCard = async (req: Request, res: Response) => {
   }
 
   try {
+    const cardInfo = await CardInfo.findOne({ _id: id });
+
+    if (cardInfo && cardInfo.isMain) {
+      const cards = await CardInfo.find();
+      cards[0].isMain = true;
+
+      await cards[0].save();
+    }
+
     await CardInfo.findOneAndDelete({ _id: id });
 
     res.status(204).json();
