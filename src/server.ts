@@ -13,6 +13,15 @@ dotenv.config();
 // Parse as number since process.env values are strings
 const PORT = parseInt(process.env["PORT"] || "5000", 10);
 
+// Check if both REFRESH_TOKEN_SECRET and JWT_SECRET are present
+if (process.env["REFRESH_TOKEN_SECRET"] && process.env["JWT_SECRET"]) {
+  console.log("Both REFRESH_TOKEN_SECRET and JWT_SECRET are present.");
+} else {
+  console.log(
+    "One or both of REFRESH_TOKEN_SECRET and JWT_SECRET are missing."
+  );
+}
+
 // Initialize database connection and start server
 // Using Promise chain for clear error handling
 connectDB()

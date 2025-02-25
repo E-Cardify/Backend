@@ -5,6 +5,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import cardInfo from "./routes/cardInfo";
+import auth from "./routes/auth";
 import user from "./routes/user";
 
 // Initialize Express application
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bo
 
 // Register API routes
 app.use("/api/v1/card-info", cardInfo); // Card information endpoints
+app.use("/api/v1/auth", auth); // User management endpoints
 app.use("/api/v1/user", user); // User management endpoints
 
 // Trust proxy headers (useful when behind reverse proxy like nginx)
