@@ -5,6 +5,7 @@
 import app from "./app";
 import connectDB from "./config/db";
 import dotenv from "dotenv";
+import { transporter } from "./config/nodemailer";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -14,11 +15,15 @@ dotenv.config();
 const PORT = parseInt(process.env["PORT"] || "5000", 10);
 
 // Check if both REFRESH_TOKEN_SECRET and JWT_SECRET are present
-if (process.env["REFRESH_TOKEN_SECRET"] && process.env["JWT_SECRET"]) {
-  console.log("Both REFRESH_TOKEN_SECRET and JWT_SECRET are present.");
+if (
+  process.env["REFRESH_TOKEN_SECRET"] &&
+  process.env["JWT_SECRET"] &&
+  process.env["VERIFICATION_TOKEN_SECRET"]
+) {
+  console.log("All required environment variables are present.");
 } else {
   console.log(
-    "One or both of REFRESH_TOKEN_SECRET and JWT_SECRET are missing."
+    "One or both of REFRESH_TOKEN_SECRET, JWT_SECRET and VERIFICATION_TOKEN_SECRET are missing."
   );
 }
 
@@ -26,11 +31,20 @@ if (process.env["REFRESH_TOKEN_SECRET"] && process.env["JWT_SECRET"]) {
 // Using Promise chain for clear error handling
 connectDB()
   .then(() => {
-    // Start Express server after successful DB connection
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
-      console.log("Press CTRL+C to stop the server");
-    });
+    transporter
+      .verify()
+      .then(() => {
+        console.log("Server is ready to take our messages");
+        // Start Express server after successful DB connection
+        app.listen(PORT, () => {
+          console.log(`Server running at http://localhost:${PORT}`);
+          console.log("Press CTRL+C to stop the server");
+        });
+      })
+      .catch((err: unknown) => {
+        console.log("Nodemailer failed to start");
+        console.log(err);
+      });
   })
   .catch((err: Error) => {
     // Log database connection error and exit process

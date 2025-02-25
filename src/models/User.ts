@@ -1,10 +1,34 @@
 import { InferSchemaType, Schema, Types, model } from "mongoose";
 
+const userUpdateLogSchema = new Schema({
+  _id: {
+    type: Types.ObjectId,
+    auto: true,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    default: new Date(),
+    required: false,
+  },
+  message: {
+    type: String,
+    required: true,
+  },
+});
+
 const UserSchema = new Schema(
   {
     _id: {
       type: Types.ObjectId,
       auto: true,
+    },
+    accountUpdateLogs: {
+      type: [userUpdateLogSchema],
+      default: [],
     },
     email: {
       type: String,
@@ -60,6 +84,7 @@ const UserSchema = new Schema(
   }
 );
 
+export type UserUpdateLogType = InferSchemaType<typeof userUpdateLogSchema>;
 export type UserType = InferSchemaType<typeof UserSchema>;
 
 const User = model<UserType>("User", UserSchema);

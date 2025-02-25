@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import User from "../../models/User";
 import bcrypt from "bcrypt";
+import { sendVerificationEMail } from "../../utils/mailUtils";
+import { generateVerificationToken } from "../../utils/tokens";
+import { createUserUpdateLog } from "../../utils/logUtils";
 
 /**
  * Handles user registration by creating a new user account.
@@ -38,6 +41,10 @@ const register = async (req: Request, res: Response) => {
       lastName,
     });
 
+    newUser.accountUpdateLogs.push(
+      createUserUpdateLog("register", "User registered")
+    );
+
     try {
       await newUser.save();
     } catch (err) {
@@ -51,7 +58,45 @@ const register = async (req: Request, res: Response) => {
       firstName: newUser.firstName,
       lastName: newUser.lastName,
     });
-    return;
+
+    let currentUser;
+    try {
+      currentUser = await User.findById(newUser._id);
+    } catch (err) {
+      console.error("Error finding user:", err);
+    }
+
+    let emailId: string | undefined;
+    try {
+      const verificationToken = generateVerificationToken(
+        email,
+        newUser._id!.toString()
+      );
+
+      if (verificationToken) {
+        emailId = await sendVerificationEMail(
+          firstName,
+          lastName,
+          verificationToken
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+    try {
+      if (currentUser && emailId) {
+        currentUser.accountUpdateLogs.push(
+          createUserUpdateLog(
+            "email sent",
+            `Verification email sent: ${emailId}`
+          )
+        );
+        await currentUser.save();
+      }
+    } catch (err) {
+      console.log(err);
+    }
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Internal server error" });

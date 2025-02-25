@@ -11,6 +11,7 @@ export const formatUserLoginResponse = (
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      isVerified: user.isVerified,
       _id: user._id,
     };
   }
@@ -21,6 +22,7 @@ export const formatUserLoginResponse = (
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
+    isVerified: user.isVerified,
     _id: user._id,
   };
 };

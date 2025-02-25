@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { generateTokens } from "../../utils/tokens";
 import { validateUserCredentials } from "../../utils/authUtils";
 import bcrypt from "bcrypt";
+import { createUserUpdateLog } from "../../utils/logUtils";
 
 export const updateUserPassword = async (req: Request, res: Response) => {
   const { oldPassword, newPassword, email } = req.body;
@@ -46,6 +47,17 @@ export const updateUserPassword = async (req: Request, res: Response) => {
   }
 
   user.password = hashedPassword;
+  user.accountUpdateLogs.push(
+    createUserUpdateLog("password updated", "Password updated")
+  );
+
+  try {
+    await generateTokens(user._id!.toString());
+  } catch (err) {
+    console.error("Failed to generate auth tokens:", err);
+    user.accessToken = "";
+    user.refreshToken = "";
+  }
 
   try {
     await user.save();

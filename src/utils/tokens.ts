@@ -131,9 +131,43 @@ const verifyRefreshToken = (token: string) => {
   }
 };
 
+const generateVerificationToken = (email: string, userId: string) => {
+  try {
+    return jwt.sign(
+      { sub: userId, iat: Date.now(), email },
+      process.env["VERIFICATION_TOKEN_SECRET"] || "verification-secret"
+    );
+  } catch (err) {
+    throw new Error("Failed to generate verification token");
+  }
+};
+
+/**
+    sub - userId
+    email - email
+ */
+const verifyVerificationToken = (token: string) => {
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env["VERIFICATION_TOKEN_SECRET"] || "verification-secret"
+    ) as { sub: string; iat: number; email: string };
+
+    if (!decoded.sub) {
+      throw new Error("Invalid verification token");
+    }
+
+    return decoded;
+  } catch (err) {
+    throw new Error("Failed to verify verification token");
+  }
+};
+
 export {
   generateTokens,
   verifyAccessToken,
   verifyRefreshToken,
   strictVerifyAccessToken,
+  generateVerificationToken,
+  verifyVerificationToken,
 };

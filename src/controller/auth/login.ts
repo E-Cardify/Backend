@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { generateTokens } from "../../utils/tokens";
 import { validateUserCredentials } from "../../utils/authUtils";
 import { formatUserLoginResponse } from "../../utils/responseUtils";
+import { createUserUpdateLog } from "../../utils/logUtils";
 
 /**
  * Handles user login by validating credentials and generating authentication tokens.
@@ -36,6 +37,8 @@ const login = async (req: Request, res: Response) => {
       res.status(500).json({ message: "User ID not found" });
       return;
     }
+
+    user.accountUpdateLogs.push(createUserUpdateLog("login", "User logged in"));
 
     // Save updated user information
     try {

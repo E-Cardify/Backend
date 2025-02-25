@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { generateTokens, verifyRefreshToken } from "../../utils/tokens";
 import User from "../../models/User";
 import { formatUserLoginResponse } from "../../utils/responseUtils";
+import { createUserUpdateLog } from "../../utils/logUtils";
 
 const refreshTokens = async (req: Request, res: Response) => {
   const token = req.headers["authorization"]?.split(" ")[1];
@@ -33,6 +34,10 @@ const refreshTokens = async (req: Request, res: Response) => {
     res.status(401).json({ message: "Invalid refresh token" });
     return;
   }
+
+  user.accountUpdateLogs.push(
+    createUserUpdateLog("refresh token", "Refresh token used")
+  );
 
   try {
     await user.save();
