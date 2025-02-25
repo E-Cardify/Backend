@@ -12,23 +12,29 @@ import mongoose from "mongoose";
  */
 const connectDB = async (): Promise<boolean> => {
   try {
-    // Retrieve MongoDB connection string from environment
+    // Get MongoDB URI from environment variables
     const mongoUri = process.env["MONGO_URI"];
+
+    // Check if MONGO_URI is configured, warn if not found
     if (!mongoUri) {
       console.warn(
         "MONGO_URI not found in environment variables, using default local connection"
       );
     }
 
-    // Establish database connection
-    await mongoose.connect(mongoUri || "mongodb://localhost:27017/Cardify");
+    // Use provided URI or fallback to local MongoDB instance
+    const connectionString = mongoUri || "mongodb://localhost:27017/Cardify";
 
-    // Connection successful
+    // Attempt to establish MongoDB connection
+    await mongoose.connect(connectionString, {});
+
+    // Log successful connection
     console.log(`MongoDB connected successfully to ${mongoUri || "localhost"}`);
     return true;
   } catch (error) {
-    // Fatal error - cannot proceed without database
-    console.error(`MongoDB connection error: ${(error as Error).message}`);
+    // Log connection error details
+    console.error("Failed to establish MongoDB connection:");
+    console.error(`Error details: ${(error as Error).message}`);
     process.exit(1);
   }
 };
