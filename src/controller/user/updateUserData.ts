@@ -1,46 +1,21 @@
 import { Request, Response } from "express";
-import {
-  generateVerificationToken,
-  strictVerifyAccessToken,
-} from "../../utils/tokens";
+import { generateVerificationToken } from "../../utils/tokens";
 import User from "../../models/User";
 import { sendVerificationEMail } from "../../utils/mailUtils";
 import { createUserUpdateLog } from "../../utils/logUtils";
+import { TokenizedRequest } from "../../types/express";
 
 export const updateUserData = async (req: Request, res: Response) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const { user } = req as TokenizedRequest;
+
+  if (!user) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
   const { firstName, lastName, email } = req.body;
 
   if (!firstName && !lastName && !email) {
     res.status(400).json({ message: "At least one field is required" });
-    return;
-  }
-
-  if (!token) {
-    res.status(400).json({ message: "Token is required" });
-    return;
-  }
-
-  let decoded;
-  try {
-    decoded = await strictVerifyAccessToken(token);
-  } catch (err) {
-    console.log(err);
-    res.status(400).json({ message: "Invalid token" });
-    return;
-  }
-
-  let user;
-  try {
-    user = await User.findById(decoded.sub);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
-
-  if (!user) {
-    res.status(400).json({ message: "User not found" });
     return;
   }
 

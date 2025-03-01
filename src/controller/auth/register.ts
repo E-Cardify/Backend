@@ -57,6 +57,7 @@ const register = async (req: Request, res: Response) => {
       email: newUser.email,
       firstName: newUser.firstName,
       lastName: newUser.lastName,
+      _id: newUser._id,
     });
 
     let currentUser;

@@ -1,48 +1,27 @@
-import { isValidObjectId } from "mongoose";
 import { Request, Response } from "express";
 import CardInfo from "../../models/CardInfo";
-import jwt from "jsonwebtoken";
-import User from "../../models/User";
+import { TokenizedRequest } from "../../types/express";
 
 const deleteCard = async (req: Request, res: Response) => {
   const id = req.params?.["id"];
-  const token = req.headers.authorization?.split(" ")[1];
-
-  if (!token) {
-    res.sendStatus(401);
-    return;
-  }
-
-  const decoded = jwt.verify(
-    token,
-    process.env["JWT_SECRET"] || "default-secret"
-  ) as { userId: string };
-
-  const user = await User.findById(decoded.userId);
+  const { user } = req as TokenizedRequest;
 
   if (!user) {
-    res.sendStatus(401);
+    res.status(401).json({ message: "Unauthorized" });
     return;
   }
 
-  if (!id) {
-    res.sendStatus(400);
-    return;
-  }
-
-  if (!isValidObjectId(id)) {
-    res.sendStatus(400);
+  if (user.cards.length === 1) {
+    res.status(400).json({ message: "Cannot delete last card" });
     return;
   }
 
   try {
     const cardInfo = await CardInfo.findOne({ _id: id, owner: user._id });
 
-    if (cardInfo && cardInfo.isMain) {
-      const cards = await CardInfo.find({ owner: user._id });
-      cards[0].isMain = true;
-
-      await cards[0].save();
+    if (!cardInfo) {
+      res.status(400).json({ message: "Card not found" });
+      return;
     }
 
     const index = user.cards.findIndex((card) => card._id.toString() === id);
@@ -50,14 +29,19 @@ const deleteCard = async (req: Request, res: Response) => {
     if (index > -1) {
       user.cards.splice(index, 1);
     }
+
+    if (user.mainCard == id) {
+      user.mainCard = user.cards[0];
+    }
+
     await user.save();
-    await CardInfo.findOneAndDelete({ _id: id });
+    await cardInfo.deleteOne();
 
     res.status(204).json();
     return;
   } catch (err) {
     console.log(err);
-    res.sendStatus(500);
+    res.status(500).json({ message: "Internal server error" });
     return;
   }
 };

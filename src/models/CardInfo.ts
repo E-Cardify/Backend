@@ -91,10 +91,6 @@ const CardInfoSchema = new Schema(
       type: [FieldSchema],
       default: [],
     },
-    isMain: {
-      type: Boolean,
-      default: false,
-    },
     owner: {
       type: Types.ObjectId,
       ref: "User",

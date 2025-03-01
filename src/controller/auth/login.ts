@@ -3,6 +3,7 @@ import { generateTokens } from "../../utils/tokens";
 import { validateUserCredentials } from "../../utils/authUtils";
 import { formatUserLoginResponse } from "../../utils/responseUtils";
 import { createUserUpdateLog } from "../../utils/logUtils";
+import { serialize } from "cookie";
 
 /**
  * Handles user login by validating credentials and generating authentication tokens.
@@ -61,8 +62,33 @@ const login = async (req: Request, res: Response) => {
       return;
     }
 
+    const serializedRefreshToken = serialize(
+      "refreshToken",
+      tokens.refreshToken,
+      {
+        httpOnly: true,
+        secure: process.env["NODE_ENV"] === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      }
+    );
+
+    const serializedAccessToken = serialize("accessToken", tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env["NODE_ENV"] === "production",
+      sameSite: "strict",
+      maxAge: 60 * 15,
+      path: "/",
+    });
+
+    res.setHeader("Set-Cookie", [
+      serializedRefreshToken,
+      serializedAccessToken,
+    ]);
+
     // Respond with formatted user login response
-    res.status(200).json(formatUserLoginResponse(user, tokens));
+    res.status(200).json(formatUserLoginResponse(user));
     return;
   } catch (err) {
     console.log(err);

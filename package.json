@@ -1,6 +1,6 @@
 {
   "name": "cardify-backend",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "main": "./src/server.ts",
   "scripts": {
     "build": "tsc",
@@ -14,8 +14,10 @@
   "description": "",
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.8",
     "@types/nodemailer": "^6.4.17",
     "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",

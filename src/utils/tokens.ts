@@ -54,6 +54,39 @@ const generateTokens = async (userId: string) => {
   }
 };
 
+const generateAccessToken = async (userId: string) => {
+  if (!isValidObjectId(userId)) {
+    throw new Error("Invalid user ID");
+  }
+
+  let user;
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    throw new Error("Failed to generate tokens");
+  }
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  try {
+    const minute = 60 * 1000;
+    const accessToken = jwt.sign(
+      { sub: userId, iat: Date.now(), exp: Date.now() + 15 * minute },
+      process.env["JWT_SECRET"] || "default-secret"
+    );
+
+    user.accessToken = accessToken;
+
+    await user.save();
+
+    return accessToken;
+  } catch (err) {
+    throw new Error("Failed to generate tokens");
+  }
+};
+
 const verifyAccessToken = (token: string) => {
   try {
     const decoded = jwt.verify(
@@ -170,4 +203,5 @@ export {
   strictVerifyAccessToken,
   generateVerificationToken,
   verifyVerificationToken,
+  generateAccessToken,
 };

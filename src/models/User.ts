@@ -78,6 +78,15 @@ const UserSchema = new Schema(
     refreshToken: {
       type: String,
     },
+    mainCard: {
+      type: Types.ObjectId,
+      ref: "CardInfo",
+      default: null,
+    },
+    maxCards: {
+      type: Number,
+      default: 3,
+    },
   },
   {
     timestamps: true,

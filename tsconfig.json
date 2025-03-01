@@ -13,6 +13,7 @@
     "noUnusedParameters": true,
 
     "isolatedModules": true,
+    "typeRoots": ["./src/types"],
 
     "checkJs": true,
 
@@ -21,6 +22,7 @@
 
     "outDir": "./dist"
   },
+  "include": ["./src/**/*.ts", "./src/types/**/*.d.ts"],
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Strictest",
   "_version": "2.0.0"

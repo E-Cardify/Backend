@@ -1,20 +1,21 @@
 import { Request, Response } from "express";
-import { generateTokens, verifyRefreshToken } from "../../utils/tokens";
+import { generateAccessToken, verifyRefreshToken } from "../../utils/tokens";
 import User from "../../models/User";
 import { formatUserLoginResponse } from "../../utils/responseUtils";
 import { createUserUpdateLog } from "../../utils/logUtils";
+import { serialize } from "cookie";
 
 const refreshTokens = async (req: Request, res: Response) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
+  const refreshToken = req.cookies["refreshToken"];
 
-  if (!token) {
+  if (!refreshToken) {
     res.status(400).json({ message: "Refresh token is required" });
     return;
   }
 
   let decoded;
   try {
-    decoded = verifyRefreshToken(token);
+    decoded = verifyRefreshToken(refreshToken);
   } catch (err) {
     console.log(err);
     res.status(401).json({ message: "Invalid refresh token" });
@@ -47,16 +48,26 @@ const refreshTokens = async (req: Request, res: Response) => {
     return;
   }
 
-  let tokens;
+  let accessToken;
   try {
-    tokens = await generateTokens(decoded.sub);
+    accessToken = await generateAccessToken(decoded.sub);
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Internal server error" });
     return;
   }
 
-  res.status(200).json(formatUserLoginResponse(user, tokens));
+  const serializedAccessToken = serialize("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env["NODE_ENV"] === "production",
+    sameSite: "strict",
+    maxAge: 60 * 15,
+    path: "/",
+  });
+
+  res.setHeader("Set-Cookie", serializedAccessToken);
+
+  res.status(200).json(formatUserLoginResponse(user));
 };
 
 export default refreshTokens;

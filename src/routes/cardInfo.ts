@@ -1,18 +1,18 @@
 import express from "express";
 import getCardInfo from "../controller/cardInfo/getCardInfo";
 import createCard from "../controller/cardInfo/createCard";
-import getAllCardInfo from "../controller/cardInfo/getAllCardInfo";
-import getMainCardInfo from "../controller/cardInfo/getMainCardInfo";
 import deleteCard from "../controller/cardInfo/deleteCard";
-import changeMainCard from "../controller/cardInfo/changeMainCard";
+import checkToken from "../middleware/checkToken";
+import updateCard from "../controller/cardInfo/updateCard";
 
 const router = express.Router();
 
-router.get("/", getAllCardInfo);
-router.get("/main", getMainCardInfo);
-router.get("/change-main-card/:id", changeMainCard)
 router.get("/:id", getCardInfo);
-router.post("/", createCard);
-router.delete("/:id", deleteCard);
+
+router.post("/create-card", checkToken, createCard);
+
+router.delete("/delete-card/:id", checkToken, deleteCard);
+
+router.put("/update-card/:id", checkToken, updateCard);
 
 export default router;

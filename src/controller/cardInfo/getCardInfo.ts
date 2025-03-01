@@ -26,8 +26,7 @@ const getCardInfo = async (req: Request, res: Response) => {
     const responseData = {
       information: cardInfo.information,
       design: cardInfo.design,
-      id: cardInfo._id,
-      isMain: cardInfo.isMain,
+      _id: cardInfo._id,
       fields: cardInfo.fields.map((field) => {
         return {
           label: field.label,

@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { isValidObjectId } from "mongoose";
 import { TokenizedRequest } from "../../types/express";
-import User from "../../models/User";
+import { formatUserPrivateDataResponse } from "../../utils/responseUtils";
+import { UserType } from "../../models/User";
 
-export const getCards = async (req: Request, res: Response) => {
+export const getUserPrivateData = async (req: Request, res: Response) => {
   const { user } = req as TokenizedRequest;
 
   if (!user) {
@@ -11,12 +12,7 @@ export const getCards = async (req: Request, res: Response) => {
     return;
   }
 
-  let newUser;
-  if (req.body.populate == "true") {
-    newUser = await User.findById(user._id).populate("cards");
-  }
-
-  res.status(200).json(newUser ? newUser.cards : user.cards);
+  res.status(200).json(formatUserPrivateDataResponse(user as UserType));
 
   try {
     if (
