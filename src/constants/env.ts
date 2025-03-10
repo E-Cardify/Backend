@@ -31,6 +31,7 @@ const VERIFICATION_TOKEN_SECRET = validateEnvVariables(
   "VERIFICATION_TOKEN_SECRET"
 );
 const ORIGIN_URL = validateEnvVariables("ORIGIN_URL");
+const AI_MODEL = validateEnvVariables("AI_MODEL");
 
 export {
   ENVIRONMENT,
@@ -41,4 +42,5 @@ export {
   JWT_SECRET,
   VERIFICATION_TOKEN_SECRET,
   ORIGIN_URL,
+  AI_MODEL,
 };

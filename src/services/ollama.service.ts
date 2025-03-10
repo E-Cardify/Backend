@@ -1,12 +1,14 @@
 import ollama from "ollama";
+import { AI_MODEL } from "../constants/env";
 
-const MODEL = "llama3.2";
-
-const streamChatWithOllama = async function* (message: string) {
-  const prompt = { role: "user", content: message };
+const streamChatWithOllama = async function* (
+  message: string,
+  context?: string
+) {
+  const prompt = { role: "user", content: context + " " + message };
 
   const response = await ollama.chat({
-    model: MODEL,
+    model: AI_MODEL,
     messages: [prompt],
     stream: true,
   });
@@ -24,7 +26,7 @@ const streamChatWithOllama = async function* (message: string) {
 
 const getEmbeddingFromOllama = async function (text: string) {
   const response = await ollama.embed({
-    model: MODEL,
+    model: AI_MODEL,
     input: text,
   });
 

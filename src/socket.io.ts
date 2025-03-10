@@ -2,6 +2,7 @@ import { Server, IncomingMessage, ServerResponse } from "http";
 import io from "socket.io";
 import { ENVIRONMENT, ORIGIN_URL } from "./constants/env";
 import { streamChatWithOllama } from "./services/ollama.service";
+import { rewriteCardDescriptionContext } from "./config/llama3.2/contexts";
 
 const SocketIO = (
   server: Server<typeof IncomingMessage, typeof ServerResponse>
@@ -27,6 +28,22 @@ const SocketIO = (
         }
       });
     }
+
+    socket.on(
+      "rewrite-card-description",
+      async ({ message }: { message: string }) => {
+        console.log(message);
+
+        const response = streamChatWithOllama(
+          message,
+          rewriteCardDescriptionContext
+        );
+
+        for await (const part of response) {
+          socket.emit("response", part);
+        }
+      }
+    );
 
     socket.on("disconnect", () => {
       console.log("A user disconnected");
