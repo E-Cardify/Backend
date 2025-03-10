@@ -2,47 +2,12 @@
  * Main server entry point
  * Initializes environment variables, database connection and Express server
  */
-import { Server } from "socket.io";
 import app from "./app";
 import connectDB from "./config/db";
 import { transporter } from "./config/nodemailer";
 import http from "http";
-import { streamChatWithOllama } from "./services/ollama.service";
-import {
-  CONSOLE_LOG_DIVIDER,
-  ENVIRONMENT,
-  ORIGIN_URL,
-  PORT,
-} from "./constants/env";
-
-const server = http.createServer(app);
-
-export const io = new Server(server, {
-  cors: {
-    origin: ORIGIN_URL,
-    credentials: true,
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  if (ENVIRONMENT === "development") {
-    socket.on("ask", async ({ message }: { message: string }) => {
-      console.log(message);
-
-      const response = streamChatWithOllama(message);
-
-      for await (const part of response) {
-        socket.emit("response", part);
-      }
-    });
-  }
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-  });
-});
+import { CONSOLE_LOG_DIVIDER, PORT } from "./constants/env";
+import { SocketIO } from "./socket.io";
 
 // Initialize database connection and start server
 // Using Promise chain for clear error handling
@@ -53,6 +18,9 @@ connectDB()
       .then(() => {
         CONSOLE_LOG_DIVIDER();
         console.log("Server is ready to take our messages");
+        const server = http.createServer(app);
+
+        SocketIO(server);
         // Start Express server after successful DB connection
         server.listen(PORT, () => {
           CONSOLE_LOG_DIVIDER();
