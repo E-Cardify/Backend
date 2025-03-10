@@ -1,78 +1,29 @@
 import { Request, Response } from "express";
-import { generateTokens } from "../../utils/tokens";
-import { validateUserCredentials } from "../../utils/authUtils";
-import bcrypt from "bcrypt";
-import { createUserUpdateLog } from "../../utils/logUtils";
+import UserModel from "../../models/User.model";
+import appAssert from "../../utils/appAssert";
+import { BAD_REQUEST, NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
+import { ResetPasswordSchema } from "../auth/auth.schemas";
+import { createUserLog } from "../../services/auth.service";
+import { UserLogType } from "../../constants/userLogTypes";
 
 export const updateUserPassword = async (req: Request, res: Response) => {
-  const { oldPassword, newPassword, email } = req.body;
-
-  if (!oldPassword || !newPassword || !email) {
-    res
-      .status(400)
-      .json({ message: "Old password, new password and email are required" });
-    return;
-  }
-
-  if (oldPassword === newPassword) {
-    res
-      .status(400)
-      .json({ message: "New password cannot be the same as the old password" });
-    return;
-  }
-
-  let user;
-  try {
-    user = await validateUserCredentials(email, oldPassword);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
-
-  if (!user) {
-    res
-      .status(400)
-      .json({ message: "User not found or old password is incorrect" });
-    return;
-  }
-
-  let hashedPassword;
-  try {
-    hashedPassword = await bcrypt.hash(newPassword, 10);
-  } catch (err) {
-    console.error("Error hashing password:", err);
-    res.status(500).json({ message: "Error hashing password" });
-    return;
-  }
-
-  user.password = hashedPassword;
-  user.accountUpdateLogs.push(
-    createUserUpdateLog("password updated", "Password updated")
+  const { newPassword, password } = ResetPasswordSchema.parse(req.body);
+  appAssert(
+    newPassword !== password,
+    BAD_REQUEST,
+    "New password cannot be the same as the old password"
   );
 
-  try {
-    await generateTokens(user._id!.toString());
-  } catch (err) {
-    console.error("Failed to generate auth tokens:", err);
-    user.accessToken = "";
-    user.refreshToken = "";
-  }
+  const user = await UserModel.findById(req.userId);
+  appAssert(user, NOT_FOUND, "User not found");
 
-  try {
-    await user.save();
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
+  const isPasswordCorrect = await user.comparePassword(password);
+  appAssert(isPasswordCorrect, UNAUTHORIZED, "Old password is incorrect");
 
-  try {
-    await generateTokens(user._id!.toString());
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
-  res.status(200).json({ message: "Password updated successfully" });
+  user.password = newPassword;
+  createUserLog(user, UserLogType.PasswordChanged, "Password changed", false);
+
+  await user.save();
+
+  res.status(OK).json({ message: "Password updated successfully" });
 };

@@ -1,49 +1,49 @@
 import { Request, Response } from "express";
-import CardInfo from "../../models/CardInfo";
-import { TokenizedRequest } from "../../types/express";
+import CardInfo from "../../models/CardInfo.model";
+import { ProtectedRequest } from "../../types/ProtectedRequest";
+import UserModel from "../../models/User.model";
+import appAssert from "../../utils/appAssert";
+import { BAD_REQUEST, FORBIDDEN, NOT_FOUND, OK } from "../../constants/http";
+import mongoose, { isValidObjectId } from "mongoose";
+import { createUserLog } from "../../services/auth.service";
+import { UserLogType } from "../../constants/userLogTypes";
 
-const deleteCard = async (req: Request, res: Response) => {
-  const id = req.params?.["id"];
-  const { user } = req as TokenizedRequest;
+const deleteCard = async (req: Request & ProtectedRequest, res: Response) => {
+  const { id } = req.params;
+  appAssert(isValidObjectId(id), BAD_REQUEST, "Invalid card id");
 
-  if (!user) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
+  const user = await UserModel.findById(req.userId);
+  appAssert(user, NOT_FOUND, "User not found");
+  const userId = user._id as mongoose.Types.ObjectId;
+
+  const card = await CardInfo.findById(id);
+  appAssert(card, NOT_FOUND, "Card not found");
+
+  appAssert(
+    userId.equals(card.userId),
+    FORBIDDEN,
+    "You are not the owner of this card"
+  );
+
+  appAssert(user.cards.length > 1, BAD_REQUEST, "Cannot delete last card");
+
+  if (user.mainCard?.equals(card._id as mongoose.Types.ObjectId)) {
+    user.cards = user.cards.filter((card) => !card._id.equals(id));
+    user.mainCard = user.cards[0];
+  } else {
+    user.cards = user.cards.filter((card) => !card._id.equals(id));
   }
 
-  if (user.cards.length === 1) {
-    res.status(400).json({ message: "Cannot delete last card" });
-    return;
-  }
+  createUserLog(
+    user,
+    UserLogType.CardDeleted,
+    "Card deleted with id: " + id,
+    false
+  );
 
-  try {
-    const cardInfo = await CardInfo.findOne({ _id: id, owner: user._id });
-
-    if (!cardInfo) {
-      res.status(400).json({ message: "Card not found" });
-      return;
-    }
-
-    const index = user.cards.findIndex((card) => card._id.toString() === id);
-
-    if (index > -1) {
-      user.cards.splice(index, 1);
-    }
-
-    if (user.mainCard == id) {
-      user.mainCard = user.cards[0];
-    }
-
-    await user.save();
-    await cardInfo.deleteOne();
-
-    res.status(204).json();
-    return;
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
+  await user.save();
+  await card.deleteOne();
+  res.status(OK).json();
 };
 
 export default deleteCard;

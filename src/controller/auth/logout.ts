@@ -1,23 +1,16 @@
 import { Request, Response } from "express";
-import { serialize } from "cookie";
+import { verifyToken } from "../../utils/jwt";
+import SessionModel from "../../models/Session.model";
+import { OK } from "../../constants/http";
+import { clearAuthCookies } from "../../utils/cookies";
 
-export default function logout(_: Request, res: Response) {
-  const serializedRefreshToken = serialize("refreshToken", "", {
-    httpOnly: true,
-    secure: process.env["NODE_ENV"] === "production",
-    sameSite: "strict",
-    maxAge: 0,
-    path: "/",
-  });
+export default async function logout(req: Request, res: Response) {
+  const accessToken = req.cookies["accessToken"] as string | undefined;
+  const { payload } = verifyToken(accessToken || "");
 
-  const serializedAccessToken = serialize("accessToken", "", {
-    httpOnly: true,
-    secure: process.env["NODE_ENV"] === "production",
-    sameSite: "strict",
-    maxAge: 0,
-    path: "/",
-  });
+  if (payload) {
+    await SessionModel.findByIdAndDelete(payload.sessionId);
+  }
 
-  res.setHeader("Set-Cookie", [serializedRefreshToken, serializedAccessToken]);
-  res.status(200).json({ message: "Logged out" });
+  clearAuthCookies(res).status(OK).json();
 }

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { isValidObjectId } from "mongoose";
-import User from "../models/User";
+import User from "../models/User.model";
 
 /**
  * Generates authentication tokens for a user session
@@ -15,21 +15,6 @@ import User from "../models/User";
  * @throws {Error} If token generation fails
  */
 const generateTokens = async (userId: string) => {
-  if (!isValidObjectId(userId)) {
-    throw new Error("Invalid user ID");
-  }
-
-  let user;
-  try {
-    user = await User.findById(userId);
-  } catch (err) {
-    throw new Error("Failed to generate tokens");
-  }
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
   try {
     const minute = 60 * 1000;
     const accessToken = jwt.sign(
@@ -43,11 +28,6 @@ const generateTokens = async (userId: string) => {
       process.env["REFRESH_TOKEN_SECRET"] || "refresh-secret"
     );
 
-    user.accessToken = accessToken;
-    user.refreshToken = refreshToken;
-
-    await user.save();
-
     return { accessToken, refreshToken };
   } catch (err) {
     throw new Error("Failed to generate tokens");
@@ -55,31 +35,12 @@ const generateTokens = async (userId: string) => {
 };
 
 const generateAccessToken = async (userId: string) => {
-  if (!isValidObjectId(userId)) {
-    throw new Error("Invalid user ID");
-  }
-
-  let user;
-  try {
-    user = await User.findById(userId);
-  } catch (err) {
-    throw new Error("Failed to generate tokens");
-  }
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
   try {
     const minute = 60 * 1000;
     const accessToken = jwt.sign(
       { sub: userId, iat: Date.now(), exp: Date.now() + 15 * minute },
       process.env["JWT_SECRET"] || "default-secret"
     );
-
-    user.accessToken = accessToken;
-
-    await user.save();
 
     return accessToken;
   } catch (err) {
@@ -109,31 +70,6 @@ const verifyAccessToken = (token: string) => {
     return decoded;
   } catch (err) {
     console.log(err);
-    throw new Error("Failed to verify access token");
-  }
-};
-
-const strictVerifyAccessToken = async (token: string) => {
-  try {
-    const decoded = verifyAccessToken(token);
-
-    let user;
-    try {
-      user = await User.findById(decoded.sub);
-    } catch (err) {
-      throw new Error("Failed to verify access token");
-    }
-
-    if (!user) {
-      throw new Error("Invalid access token");
-    }
-
-    if (user.accessToken !== token) {
-      throw new Error("Invalid access token");
-    }
-
-    return decoded;
-  } catch (err) {
     throw new Error("Failed to verify access token");
   }
 };
@@ -200,7 +136,6 @@ export {
   generateTokens,
   verifyAccessToken,
   verifyRefreshToken,
-  strictVerifyAccessToken,
   generateVerificationToken,
   verifyVerificationToken,
   generateAccessToken,

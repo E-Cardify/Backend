@@ -2,30 +2,47 @@
  * Main server entry point
  * Initializes environment variables, database connection and Express server
  */
+import { Server } from "socket.io";
 import app from "./app";
 import connectDB from "./config/db";
-import dotenv from "dotenv";
 import { transporter } from "./config/nodemailer";
+import http from "http";
+import { streamChatWithOllama } from "./services/ollama.service";
+import {
+  CONSOLE_LOG_DIVIDER,
+  ENVIRONMENT,
+  ORIGIN_URL,
+  PORT,
+} from "./constants/env";
 
-// Load environment variables from .env file
-dotenv.config();
+const server = http.createServer(app);
 
-// Default port is 5000 if not specified in environment variables
-// Parse as number since process.env values are strings
-const PORT = parseInt(process.env["PORT"] || "5000", 10);
+export const io = new Server(server, {
+  cors: {
+    origin: ORIGIN_URL,
+    credentials: true,
+  },
+});
 
-// Check if both REFRESH_TOKEN_SECRET and JWT_SECRET are present
-if (
-  process.env["REFRESH_TOKEN_SECRET"] &&
-  process.env["JWT_SECRET"] &&
-  process.env["VERIFICATION_TOKEN_SECRET"]
-) {
-  console.log("All required environment variables are present.");
-} else {
-  console.log(
-    "One or both of REFRESH_TOKEN_SECRET, JWT_SECRET and VERIFICATION_TOKEN_SECRET are missing."
-  );
-}
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  if (ENVIRONMENT === "development") {
+    socket.on("ask", async ({ message }: { message: string }) => {
+      console.log(message);
+
+      const response = streamChatWithOllama(message);
+
+      for await (const part of response) {
+        socket.emit("response", part);
+      }
+    });
+  }
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+  });
+});
 
 // Initialize database connection and start server
 // Using Promise chain for clear error handling
@@ -34,21 +51,28 @@ connectDB()
     transporter
       .verify()
       .then(() => {
+        CONSOLE_LOG_DIVIDER();
         console.log("Server is ready to take our messages");
         // Start Express server after successful DB connection
-        app.listen(PORT, () => {
-          console.log(`Server running at http://localhost:${PORT}`);
+        server.listen(PORT, () => {
+          CONSOLE_LOG_DIVIDER();
+          console.log(`Server running at :${PORT}`);
+          CONSOLE_LOG_DIVIDER();
           console.log("Press CTRL+C to stop the server");
         });
       })
       .catch((err: unknown) => {
+        CONSOLE_LOG_DIVIDER();
         console.log("Nodemailer failed to start");
+        CONSOLE_LOG_DIVIDER();
         console.log(err);
       });
   })
   .catch((err: Error) => {
     // Log database connection error and exit process
+    CONSOLE_LOG_DIVIDER();
     console.error("Failed to connect to the database:", err);
+    CONSOLE_LOG_DIVIDER();
     console.error("Server cannot start without database connection");
     process.exit(1); // Exit with error code
   });

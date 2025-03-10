@@ -1,53 +1,25 @@
-import { isValidObjectId } from "mongoose";
-import CardInfo from "../../models/CardInfo";
 import { Request, Response } from "express";
-import { TokenizedRequest } from "../../types/express";
+import { createCardInfoSchema } from "./cardInfo.schemas";
+import { createCardInfo } from "../../services/cardInfo.service";
+import { ProtectedRequest } from "../../types/ProtectedRequest";
+import UserModel from "../../models/User.model";
+import appAssert from "../../utils/appAssert";
+import { CREATED, NOT_FOUND } from "../../constants/http";
 
-const createCard = async (req: Request, res: Response) => {
-  const { information, design, fields } = req.body;
-  const { user } = req as TokenizedRequest;
+const createCard = async (req: Request & ProtectedRequest, res: Response) => {
+  const user = await UserModel.findById(req.userId);
+  appAssert(user, NOT_FOUND, "User not found");
 
-  if (!user) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  const { information, design, fields } = createCardInfoSchema.parse(req.body);
 
-  if (user.cards.length >= user.maxCards) {
-    res.status(400).json({ message: "Max cards reached" });
-    return;
-  }
+  const { cardInfo } = await createCardInfo({
+    information,
+    design,
+    fields,
+    user,
+  });
 
-  let isMain = false;
-
-  if (user.cards.length === 0) {
-    isMain = true;
-  }
-
-  if (user.mainCard == null || !isValidObjectId(user.mainCard)) {
-    isMain = true;
-  }
-
-  try {
-    const cardInfo = new CardInfo({
-      information,
-      design,
-      fields,
-      owner: user._id,
-    });
-
-    user.cards.push(cardInfo._id!);
-    if (isMain) {
-      user.mainCard = cardInfo._id!;
-    }
-    await user.save();
-    await cardInfo.save();
-    res.status(201).json(cardInfo._id);
-    return;
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
+  res.status(CREATED).json(cardInfo);
 };
 
 export default createCard;

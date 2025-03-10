@@ -1,33 +1,18 @@
 import { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
-import { TokenizedRequest } from "../../types/express";
-import User from "../../models/User";
-export const getMainCard = async (req: Request, res: Response) => {
-  const { user } = req as TokenizedRequest;
+import { ProtectedRequest } from "../../types/ProtectedRequest";
+import UserModel from "../../models/User.model";
+import { NOT_FOUND, OK } from "../../constants/http";
+import appAssert from "../../utils/appAssert";
 
-  if (!user) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+export const getMainCard = async (
+  req: Request & ProtectedRequest,
+  res: Response
+) => {
+  const user = await UserModel.findById(req.userId);
+  appAssert(user, NOT_FOUND, "User not found");
 
-  const newUser = await User.findById(user._id).populate("mainCard");
+  const mainCard = await user.getMainCard();
+  appAssert(mainCard, NOT_FOUND, "Main card not found");
 
-  if (!newUser) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  res.status(200).json(newUser.mainCard);
-
-  try {
-    if (
-      isValidObjectId(user.cards[0]) &&
-      (user.mainCard.toString() === "" || !isValidObjectId(user.mainCard))
-    ) {
-      user.mainCard = user.cards[0];
-      await user.save();
-    }
-  } catch (err) {
-    console.log(err);
-  }
+  res.status(OK).json(mainCard);
 };

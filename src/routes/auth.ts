@@ -8,23 +8,28 @@
 import express from "express";
 import login from "../controller/auth/login";
 import register from "../controller/auth/register";
-import verifyAccessTokenHandler from "../controller/auth/verifyAccessTokenHandler";
-import refreshTokens from "../controller/auth/refreshTokens";
+// import verifyAccessTokenHandler from "../controller/auth/verifyAccessTokenHandler";
+import refresh from "../controller/auth/refresh";
 import verifyEmail from "../controller/auth/verifyEmail";
 import logout from "../controller/auth/logout";
-import checkToken from "../middleware/checkToken";
+// import checkToken from "../middleware/checkToken";
 import resendEmail from "../controller/auth/resendEmail";
-
+import { catchErrors } from "../utils/catchErrors";
+import { authenticate } from "../middleware/authenticate";
 const router = express.Router();
 
-router.post("/resend-email", checkToken, resendEmail);
-router.post("/login", login);
-router.post("/register", register);
-router.post("/logout", logout);
+router.get(
+  "/resend-email",
+  catchErrors(authenticate),
+  catchErrors(resendEmail)
+);
+router.post("/login", catchErrors(login));
+router.post("/register", catchErrors(register));
+router.get("/logout", logout);
 
-router.post("/verify-access-token", checkToken, verifyAccessTokenHandler);
-router.post("/refresh-tokens", refreshTokens);
+// router.post("/verify-access-token", checkToken, verifyAccessTokenHandler);
+router.get("/refresh", catchErrors(refresh));
 
-router.get("/verify-email/:token", verifyEmail);
+router.get("/verify-email/:code", catchErrors(verifyEmail));
 
 export default router;

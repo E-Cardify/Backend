@@ -8,6 +8,12 @@ import cardInfo from "./routes/cardInfo";
 import auth from "./routes/auth";
 import user from "./routes/user";
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middleware/errorHandler";
+import { catchErrors } from "./utils/catchErrors";
+import { authenticate } from "./middleware/authenticate";
+import { NOT_FOUND } from "./constants/http";
+import ollama from "./routes/ollama";
+import { ORIGIN_URL } from "./constants/env";
 
 // Initialize Express application
 const app: Application = express();
@@ -15,7 +21,7 @@ const app: Application = express();
 // Configure middleware
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ORIGIN_URL,
     credentials: true,
   })
 ); // Enable Cross-Origin Resource Sharing
@@ -23,10 +29,22 @@ app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 app.use(cookieParser());
 
-// Register API routes
-app.use("/api/v1/card-info", cardInfo); // Card information endpoints
-app.use("/api/v1/auth", auth); // User management endpoints
-app.use("/api/v1/user", user); // User management endpoints
+app.get(
+  "/test-error",
+  catchErrors(async () => {
+    throw new Error("Test error");
+  })
+);
+
+app.use("/api/v1/ollama", ollama);
+app.use("/api/v1/card-info", cardInfo);
+app.use("/api/v1/auth", auth);
+app.use("/api/v1/user", catchErrors(authenticate), user);
+app.all("*", (_, res) => {
+  res.status(NOT_FOUND).json({ message: "Not found" });
+});
+
+app.use(errorHandler);
 
 // Trust proxy headers (useful when behind reverse proxy like nginx)
 app.set("trust proxy", true);

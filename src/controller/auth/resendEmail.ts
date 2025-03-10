@@ -1,54 +1,43 @@
 import { Request, Response } from "express";
-import { sendVerificationEMail } from "../../utils/mailUtils";
-import { generateVerificationToken } from "../../utils/tokens";
-import { createUserUpdateLog } from "../../utils/logUtils";
-import { TokenizedRequest } from "../../types/express";
+import VerificationCodeModel from "../../models/VerificationCode.model";
+import { ProtectedRequest } from "../../types/ProtectedRequest";
+import UserModel from "../../models/User.model";
+import { CONFLICT, NOT_FOUND, OK } from "../../constants/http";
+import appAssert from "../../utils/appAssert";
+import VerificationCodeType from "../../constants/verificationCodeTypes";
+import { oneYearFromNow } from "../../utils/oneYearFromNow";
+import { sendVerificationMail } from "../../services/mail.service";
+import mongoose from "mongoose";
+import { createUserLog } from "../../services/auth.service";
+import { UserLogType } from "../../constants/userLogTypes";
+import { fiveMinutesAgo } from "../../utils/fiveMinutesAgo";
 
-const resendEmail = async (req: Request, res: Response) => {
-  const { user } = req as TokenizedRequest;
+const resendEmail = async (req: Request & ProtectedRequest, res: Response) => {
+  const user = await UserModel.findById(req.userId);
+  appAssert(user, NOT_FOUND, "User not found");
+  appAssert(!user.isVerified, CONFLICT, "User is already verified");
+  const userId = user._id;
 
-  if (!user) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  const fiveMinAgo = fiveMinutesAgo();
+  const count = await VerificationCodeModel.countDocuments({
+    userId: user._id,
+    type: VerificationCodeType.EmailVerification,
+    createdAt: { $gt: fiveMinAgo },
+  });
 
-  if (user.isVerified) {
-    res.status(400).json({ message: "Email already verified" });
-    return;
-  }
+  appAssert(count < 3, CONFLICT, "You have sent too many verification emails");
 
-  let emailId: string | undefined;
-  try {
-    const verificationToken = generateVerificationToken(
-      user.email,
-      user._id!.toString()
-    );
+  const verificationCode = await VerificationCodeModel.create({
+    userId,
+    type: VerificationCodeType.EmailVerification,
+    expiresAt: oneYearFromNow(),
+  });
 
-    if (verificationToken) {
-      emailId = await sendVerificationEMail(
-        user.firstName,
-        user.lastName,
-        verificationToken
-      );
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
+  sendVerificationMail(user, verificationCode._id as mongoose.Types.ObjectId);
+  createUserLog(user, UserLogType.EmailSent, "Email verification resent");
+  await user.save();
 
-  try {
-    if (user && emailId) {
-      user.accountUpdateLogs.push(
-        createUserUpdateLog("email sent", `Verification email sent: ${emailId}`)
-      );
-      await user.save();
-    }
-  } catch (err) {
-    console.log(err);
-  }
-
-  res.status(200).json({ message: "Email sent" });
+  res.status(OK).json({ message: "Email sent" });
 };
 
 export default resendEmail;

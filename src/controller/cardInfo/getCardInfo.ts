@@ -1,47 +1,20 @@
-import { isValidObjectId } from "mongoose";
 import { Request, Response } from "express";
-import CardInfo from "../../models/CardInfo";
+import appAssert from "../../utils/appAssert";
+import mongoose, { isValidObjectId } from "mongoose";
+import { BAD_REQUEST, NOT_FOUND, OK } from "../../constants/http";
+import CardInfoModel from "../../models/CardInfo.model";
+import { formatCardInfoPublicDataResponse } from "../../utils/responseUtils";
 
 const getCardInfo = async (req: Request, res: Response) => {
-  const id = req.params?.["id"];
+  const { id } = req.params;
+  appAssert(isValidObjectId(id), BAD_REQUEST, "Specified card id is not valid");
 
-  if (!id) {
-    res.sendStatus(400);
-    return;
-  }
+  const _id = new mongoose.Types.ObjectId(id);
 
-  if (!isValidObjectId(id)) {
-    res.sendStatus(400);
-    return;
-  }
+  const cardInfo = await CardInfoModel.findById(_id);
+  appAssert(cardInfo, NOT_FOUND, "Card with this id doesn't exist");
 
-  try {
-    const cardInfo = await CardInfo.findById(id);
-
-    if (!cardInfo) {
-      res.sendStatus(404);
-      return;
-    }
-
-    const responseData = {
-      information: cardInfo.information,
-      design: cardInfo.design,
-      _id: cardInfo._id,
-      fields: cardInfo.fields.map((field) => {
-        return {
-          label: field.label,
-          value: field.value,
-        };
-      }),
-    };
-
-    res.status(200).json({ ...responseData });
-    return;
-  } catch (err) {
-    console.log(err);
-    res.sendStatus(500);
-    return;
-  }
+  res.status(OK).json(formatCardInfoPublicDataResponse(cardInfo));
 };
 
 export default getCardInfo;

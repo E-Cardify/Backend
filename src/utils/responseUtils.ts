@@ -1,6 +1,7 @@
-import { UserType } from "../models/User";
+import { CardInfoDocument } from "../models/CardInfo.model";
+import { UserDocument } from "../models/User.model";
 
-export const formatUserLoginResponse = (user: UserType) => {
+const formatUserLoginResponse = (user: UserDocument) => {
   return {
     email: user.email,
     firstName: user.firstName,
@@ -11,7 +12,7 @@ export const formatUserLoginResponse = (user: UserType) => {
   };
 };
 
-export const formatUserPrivateDataResponse = (user: UserType) => {
+const formatUserPrivateDataResponse = (user: UserDocument) => {
   return {
     _id: user._id,
     mainCard: user.mainCard,
@@ -22,4 +23,22 @@ export const formatUserPrivateDataResponse = (user: UserType) => {
     isVerified: user.isVerified,
     maxCards: user.maxCards,
   };
+};
+
+const formatCardInfoPublicDataResponse = (cardInfo: CardInfoDocument) => {
+  return {
+    _id: cardInfo._id,
+    information: cardInfo.information,
+    design: cardInfo.design,
+    fields: cardInfo.fields,
+    userId: cardInfo.userId,
+    createdAt: cardInfo.createdAt,
+    updateAt: cardInfo.updatedAt,
+  };
+};
+
+export {
+  formatUserLoginResponse,
+  formatUserPrivateDataResponse,
+  formatCardInfoPublicDataResponse,
 };

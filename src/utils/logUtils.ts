@@ -1,4 +1,4 @@
-import { UserUpdateLogType } from "../models/User";
+import { UserUpdateLogType } from "../models/User.model";
 
 export const createUserUpdateLog = (
   type: string,

@@ -1,65 +1,52 @@
 import { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
-import { TokenizedRequest } from "../../types/express";
-import CardInfo from "../../models/CardInfo";
+import mongoose, { isValidObjectId } from "mongoose";
+import { ProtectedRequest } from "../../types/ProtectedRequest";
+import UserModel from "../../models/User.model";
+import { BAD_REQUEST, NOT_FOUND, OK } from "../../constants/http";
+import appAssert from "../../utils/appAssert";
+import CardInfoModel from "../../models/CardInfo.model";
+import { createUserLog } from "../../services/auth.service";
+import { UserLogType } from "../../constants/userLogTypes";
 
-export const updateMainCard = async (req: Request, res: Response) => {
-  const { user } = req as TokenizedRequest;
+export const updateMainCard = async (
+  req: Request & ProtectedRequest,
+  res: Response
+) => {
   const { id } = req.params;
+  appAssert(isValidObjectId(id), BAD_REQUEST, "Invalid card id");
 
-  if (!user) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  const user = await UserModel.findById(req.userId);
+  appAssert(user, NOT_FOUND, "User not found");
+  const userId = user._id as mongoose.Types.ObjectId;
 
-  if (!isValidObjectId(id)) {
-    res.status(400).json({ message: "Invalid card id" });
-    return;
-  }
+  appAssert(
+    user.cards.length !== 0,
+    BAD_REQUEST,
+    "User doesn't have any cards"
+  );
 
-  let card;
-  try {
-    card = await CardInfo.findById(id);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
+  appAssert(
+    !(user.mainCard as mongoose.Types.ObjectId).equals(id),
+    BAD_REQUEST,
+    "Main card is already set to this card"
+  );
 
-  if (!card) {
-    res.status(400).json({ message: "Card not found" });
-    return;
-  }
+  const card = await CardInfoModel.findOne({
+    _id: id,
+    userId,
+  });
+  appAssert(card, NOT_FOUND, "Card not found");
 
-  if (!card._id) {
-    res.status(400).json({ message: "Card not found" });
-    return;
-  }
+  createUserLog(
+    user,
+    UserLogType.MainCardSet,
+    "Main card from " + user.mainCard + " set to " + card._id,
+    false
+  );
 
-  if (!user.cards.map((id) => id.toString()).includes(card._id?.toString())) {
-    res.status(400).json({ message: "Card not found" });
-    return;
-  }
+  user.mainCard = card._id as mongoose.Types.ObjectId;
 
-  if (user.mainCard.toString() === card._id.toString()) {
-    res.status(400).json({ message: "Card is already the main card" });
-    return;
-  }
-
-  user.mainCard = card._id;
   await user.save();
 
-  res.status(200).json(user.mainCard);
-
-  try {
-    if (
-      isValidObjectId(user.cards[0]) &&
-      (user.mainCard.toString() === "" || !isValidObjectId(user.mainCard))
-    ) {
-      user.mainCard = user.cards[0];
-      await user.save();
-    }
-  } catch (err) {
-    console.log(err);
-  }
+  res.status(OK).json(card);
 };

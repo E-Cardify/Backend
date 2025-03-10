@@ -1,4 +1,4 @@
-import User from "../models/User";
+import User from "../models/User.model";
 import bcrypt from "bcrypt";
 
 // Find and validate user credentials

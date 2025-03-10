@@ -1,47 +1,21 @@
 import { Request, Response } from "express";
-import { verifyVerificationToken } from "../../utils/tokens";
-import User from "../../models/User";
-import { createUserUpdateLog } from "../../utils/logUtils";
+import { verificationCodeSchema } from "./auth.schemas";
+import {
+  createUserLog,
+  verifyEmail as verifyEmailService,
+} from "../../services/auth.service";
+import { formatUserPrivateDataResponse } from "../../utils/responseUtils";
+import { OK } from "../../constants/http";
+import { UserLogType } from "../../constants/userLogTypes";
 
 const verifyEmail = async (req: Request, res: Response) => {
-  const { token } = req.params;
+  const verificationCode = verificationCodeSchema.parse(req.params["code"]);
 
-  let decoded;
-  try {
-    decoded = verifyVerificationToken(token);
-  } catch (err) {
-    console.log(err);
-    res.status(401).json({ message: "Invalid verification token" });
-    return;
-  }
+  const { user } = await verifyEmailService(verificationCode);
 
-  const user = await User.findOne({
-    _id: decoded.sub,
-    email: decoded.email,
-  });
-  if (!user) {
-    res.status(401).json({ message: "User not found" });
-    return;
-  }
+  res.status(OK).json(formatUserPrivateDataResponse(user));
 
-  if (user.isVerified) {
-    res.status(401).json({ message: "User already verified" });
-    return;
-  }
-
-  user.isVerified = true;
-  user.accountUpdateLogs.push(
-    createUserUpdateLog("email verified", "User verified")
-  );
-  try {
-    await user.save();
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-    return;
-  }
-
-  res.status(200).json({ message: "User verified successfully" });
+  createUserLog(user, UserLogType.EmailVerified, "Email verified");
 };
 
 export default verifyEmail;
