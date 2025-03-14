@@ -14,7 +14,7 @@ const handleZodError = (res: Response, err: ZodError) => {
   });
 
   res.status(BAD_REQUEST).json({
-    message: errors[0].message,
+    message: "Missing or invalid information",
     errors: errors,
   });
 };
@@ -43,6 +43,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   }
 
   res.status(INTERNAL_SERVER_ERROR).json({
-    message: "Internal server error",
+    message: "Internal server error, try again later.",
   });
 };

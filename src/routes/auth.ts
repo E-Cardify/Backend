@@ -16,6 +16,7 @@ import logout from "../controller/auth/logout";
 import resendEmail from "../controller/auth/resendEmail";
 import { catchErrors } from "../utils/catchErrors";
 import { authenticate } from "../middleware/authenticate";
+import { loginLimiter } from "./auth.limiters";
 const router = express.Router();
 
 router.get(
@@ -23,7 +24,7 @@ router.get(
   catchErrors(authenticate),
   catchErrors(resendEmail)
 );
-router.post("/login", catchErrors(login));
+router.post("/login", loginLimiter, catchErrors(login));
 router.post("/register", catchErrors(register));
 router.get("/logout", logout);
 

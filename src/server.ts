@@ -6,8 +6,19 @@ import app from "./app";
 import connectDB from "./config/db";
 import { transporter } from "./config/nodemailer";
 import http from "http";
-import { CONSOLE_LOG_DIVIDER, PORT } from "./constants/env";
-import { SocketIO } from "./socket.io";
+import { CONSOLE_LOG_DIVIDER, ORIGIN_URL, PORT } from "./constants/env";
+import setupSocketIoRoutes from "./socket.io";
+import socketio from "socket.io";
+
+const server = http.createServer(app);
+
+const io = new socketio.Server(server, {
+  cors: {
+    origin: ORIGIN_URL,
+    credentials: true,
+  },
+  cookie: true,
+});
 
 // Initialize database connection and start server
 // Using Promise chain for clear error handling
@@ -18,9 +29,8 @@ connectDB()
       .then(() => {
         CONSOLE_LOG_DIVIDER();
         console.log("Server is ready to take our messages");
-        const server = http.createServer(app);
 
-        SocketIO(server);
+        setupSocketIoRoutes(io);
         // Start Express server after successful DB connection
         server.listen(PORT, () => {
           CONSOLE_LOG_DIVIDER();
@@ -44,3 +54,5 @@ connectDB()
     console.error("Server cannot start without database connection");
     process.exit(1); // Exit with error code
   });
+
+export { io };
