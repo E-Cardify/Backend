@@ -2,46 +2,22 @@
  * Main server entry point
  * Initializes environment variables, database connection and Express server
  */
-import { Server } from "socket.io";
 import app from "./app";
 import connectDB from "./config/db";
 import { transporter } from "./config/nodemailer";
 import http from "http";
-import { streamChatWithOllama } from "./services/ollama.service";
-import {
-  CONSOLE_LOG_DIVIDER,
-  ENVIRONMENT,
-  ORIGIN_URL,
-  PORT,
-} from "./constants/env";
+import { CONSOLE_LOG_DIVIDER, ORIGIN_URL, PORT } from "./constants/env";
+import setupSocketIoRoutes from "./socket.io";
+import socketio from "socket.io";
 
 const server = http.createServer(app);
 
-export const io = new Server(server, {
+const io = new socketio.Server(server, {
   cors: {
     origin: ORIGIN_URL,
     credentials: true,
   },
-});
-
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  if (ENVIRONMENT === "development") {
-    socket.on("ask", async ({ message }: { message: string }) => {
-      console.log(message);
-
-      const response = streamChatWithOllama(message);
-
-      for await (const part of response) {
-        socket.emit("response", part);
-      }
-    });
-  }
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-  });
+  cookie: true,
 });
 
 // Initialize database connection and start server
@@ -53,6 +29,8 @@ connectDB()
       .then(() => {
         CONSOLE_LOG_DIVIDER();
         console.log("Server is ready to take our messages");
+
+        setupSocketIoRoutes(io);
         // Start Express server after successful DB connection
         server.listen(PORT, () => {
           CONSOLE_LOG_DIVIDER();
@@ -76,3 +54,5 @@ connectDB()
     console.error("Server cannot start without database connection");
     process.exit(1); // Exit with error code
   });
+
+export { io };
