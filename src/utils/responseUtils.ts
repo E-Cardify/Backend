@@ -23,7 +23,7 @@ const formatUserPrivateDataResponse = (user: UserDocument) => {
     email: user.email,
     isVerified: user.isVerified,
     maxCards: user.maxCards,
-    avatar: user.avatarUrl,
+    avatar: user.avatarUrl || undefined,
   };
 };
 

@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import UserModel from "../models/User.model";
+import UserModel, { UserDocument } from "../models/User.model";
 import appAssert from "../utils/appAssert";
 import { BAD_REQUEST, NOT_FOUND } from "../constants/http";
 import { deleteFromCloudinary, uploadToCloudinary } from "./cloudinary.service";
@@ -9,13 +9,7 @@ import { imageExtensions } from "../constants/fileExtensions";
 import { createUserLog } from "./auth.service";
 import { UserLogType } from "../constants/userLogTypes";
 
-async function uploadAvatarImageHandler(
-  userId: Types.ObjectId,
-  file: Express.Multer.File
-) {
-  const user = await UserModel.findById(userId);
-  appAssert(user, NOT_FOUND, "User not found");
-
+async function deleteUserAvatarImageHandler(user: UserDocument) {
   const { avatarPublicId } = user;
 
   if (avatarPublicId) {
@@ -28,6 +22,16 @@ async function uploadAvatarImageHandler(
     user.avatarUrl = "";
     user.avatarPublicId = "";
   }
+}
+
+async function uploadAvatarImageHandler(
+  userId: Types.ObjectId,
+  file: Express.Multer.File
+) {
+  const user = await UserModel.findById(userId);
+  appAssert(user, NOT_FOUND, "User not found");
+
+  await deleteUserAvatarImageHandler(user);
 
   const isExtensionValid = validateImageFileExtension(file);
   appAssert(
@@ -62,4 +66,4 @@ async function uploadAvatarImageHandler(
   return { user, file: newFile };
 }
 
-export { uploadAvatarImageHandler };
+export { uploadAvatarImageHandler, deleteUserAvatarImageHandler };

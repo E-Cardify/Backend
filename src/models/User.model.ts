@@ -27,6 +27,7 @@ export interface UserDocument extends Document {
   isVerified: boolean;
   accessToken: string;
   refreshToken: string;
+  isAccountDeleted: boolean;
 
   avatarUrl?: string;
   avatarPublicId?: string;
@@ -101,6 +102,11 @@ const UserSchema = new Schema<UserDocument>(
     avatarPublicId: {
       type: String,
       required: false,
+    },
+    isAccountDeleted: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
   },
   {

@@ -16,7 +16,8 @@ import logout from "../controller/auth/logout";
 import resendEmail from "../controller/auth/resendEmail";
 import { catchErrors } from "../utils/catchErrors";
 import { authenticate } from "../middleware/authenticate";
-import { loginLimiter } from "./auth.limiters";
+import { deleteAccountLimiter, loginLimiter } from "./auth.limiters";
+import deleteAccount from "../controller/auth/deleteAccount";
 const router = express.Router();
 
 router.get(
@@ -24,6 +25,14 @@ router.get(
   catchErrors(authenticate),
   catchErrors(resendEmail)
 );
+
+router.delete(
+  "/delete-account",
+  catchErrors(authenticate),
+  deleteAccountLimiter,
+  catchErrors(deleteAccount)
+);
+
 router.post("/login", loginLimiter, catchErrors(login));
 router.post("/register", catchErrors(register));
 router.get("/logout", logout);
