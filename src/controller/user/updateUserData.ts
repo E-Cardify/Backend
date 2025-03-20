@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import UserModel from "../../models/User.model";
-import { BAD_REQUEST, NOT_FOUND, OK } from "../../constants/http";
+import { BAD_REQUEST, CONFLICT, NOT_FOUND, OK } from "../../constants/http";
 import appAssert from "../../utils/appAssert";
 import { updateUserDataSchema } from "./user.schemas";
 import VerificationCodeModel from "../../models/VerificationCode.model";
@@ -55,6 +55,11 @@ export const updateUserData = async (req: Request, res: Response) => {
   }
 
   if (email && email !== user.email) {
+    const existingUser = await UserModel.findOne({
+      email,
+    });
+    appAssert(!existingUser, CONFLICT, "User with this email already exists");
+
     createUserLog(
       user,
       UserLogType.AccountUpdated,

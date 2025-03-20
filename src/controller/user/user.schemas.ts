@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { UserLogType } from "../../constants/userLogTypes";
-import { emailSchema, passwordSchema } from "../auth/auth.schemas";
+import { emailSchema, namesSchema, passwordSchema } from "../../lib/schemas";
 
 export const getLogsSchema = z.object({
   limit: z.number().optional(),
@@ -10,8 +10,8 @@ export const getLogsSchema = z.object({
 
 export const updateUserDataSchema = z
   .object({
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
+    firstName: namesSchema.optional(),
+    lastName: namesSchema.optional(),
     email: emailSchema.optional(),
     password: passwordSchema.optional(),
     birthDate: z.coerce.date().nullable().optional(),

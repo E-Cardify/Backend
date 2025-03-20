@@ -46,7 +46,4 @@ app.all("*", (_, res) => {
 
 app.use(errorHandler);
 
-// Trust proxy headers (useful when behind reverse proxy like nginx)
-app.set("trust proxy", true);
-
 export default app;
