@@ -28,6 +28,9 @@ export interface UserDocument extends Document {
   accessToken: string;
   refreshToken: string;
 
+  avatarUrl?: string;
+  avatarPublicId?: string;
+
   userLogs: mongoose.Types.ObjectId[];
   cards: mongoose.Types.ObjectId[];
   mainCard: mongoose.Types.ObjectId | null;
@@ -90,6 +93,14 @@ const UserSchema = new Schema<UserDocument>(
     maxCards: {
       type: Number,
       default: 3,
+    },
+    avatarUrl: {
+      type: String,
+      required: false,
+    },
+    avatarPublicId: {
+      type: String,
+      required: false,
     },
   },
   {

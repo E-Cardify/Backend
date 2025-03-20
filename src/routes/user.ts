@@ -7,12 +7,19 @@ import { getCards } from "../controller/user/getCards";
 import { getMainCard } from "../controller/user/getMainCard";
 import { updateMainCard } from "../controller/user/changeMainCard";
 import { getUserPrivateData } from "../controller/user/getUserPrivateData";
-import { catchErrors } from "../utils/catchErrors";
+import { catchErrors, catchSynchronousErrors } from "../utils/catchErrors";
 import { getLogs } from "../controller/user/getLogs";
 import { NOT_FOUND } from "../constants/http";
+import { uploadAvatarImage } from "../controller/user/uploadAvatarImage";
+import { multerAvatarUpload } from "../config/multer";
 
 const router = express.Router();
 
+router.post(
+  "/upload-avatar-image",
+  catchSynchronousErrors(multerAvatarUpload.single("avatarImage")),
+  catchErrors(uploadAvatarImage)
+);
 router.get("/main-card", catchErrors(getMainCard));
 router.get("/get-cards", catchErrors(getCards));
 router.post("/get-logs", catchErrors(getLogs));
