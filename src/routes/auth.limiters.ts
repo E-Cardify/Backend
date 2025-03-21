@@ -6,6 +6,7 @@ const minute = 1000 * 60;
 const loginLimiter = rateLimit({
   windowMs: 5 * minute, //5 minutes
   max: 5,
+  keyGenerator: (req) => `${req.ip}-${req.body.email || ""}`,
   message: createLimiterResponse(
     "Too many login attempts, please try again later."
   ),
@@ -14,6 +15,7 @@ const loginLimiter = rateLimit({
 const deleteAccountLimiter = rateLimit({
   windowMs: 60 * minute, //5 minutes
   max: 3,
+  keyGenerator: (req) => `${req.ip}-${req.body.email || ""}`,
   message: createLimiterResponse(
     "Too many attempts, please try again in one hour."
   ),
