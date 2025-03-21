@@ -12,6 +12,8 @@ export const LoginSchema = z.object({
   userAgent: userAgentSchema,
 });
 
+export const DeleteAccountSchema = LoginSchema;
+
 export const ResetPasswordSchema = z.object({
   newPassword: passwordSchema,
   password: passwordSchema,

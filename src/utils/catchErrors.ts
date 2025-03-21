@@ -15,3 +15,12 @@ export const catchErrors =
       next(err);
     }
   };
+
+export const catchSynchronousErrors =
+  (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+    try {
+      fn(req, res, next);
+    } catch (err) {
+      next(err);
+    }
+  };

@@ -27,6 +27,10 @@ export interface UserDocument extends Document {
   isVerified: boolean;
   accessToken: string;
   refreshToken: string;
+  isAccountDeleted: boolean;
+
+  avatarUrl?: string;
+  avatarPublicId?: string;
 
   userLogs: mongoose.Types.ObjectId[];
   cards: mongoose.Types.ObjectId[];
@@ -90,6 +94,19 @@ const UserSchema = new Schema<UserDocument>(
     maxCards: {
       type: Number,
       default: 3,
+    },
+    avatarUrl: {
+      type: String,
+      required: false,
+    },
+    avatarPublicId: {
+      type: String,
+      required: false,
+    },
+    isAccountDeleted: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
   },
   {

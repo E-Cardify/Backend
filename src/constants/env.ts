@@ -32,6 +32,9 @@ const VERIFICATION_TOKEN_SECRET = validateEnvVariables(
 );
 const ORIGIN_URL = validateEnvVariables("ORIGIN_URL");
 const AI_MODEL = validateEnvVariables("AI_MODEL");
+const CLOUDINARY_CLOUD_NAME = validateEnvVariables("CLOUDINARY_CLOUD_NAME");
+const CLOUDINARY_API_KEY = validateEnvVariables("CLOUDINARY_API_KEY");
+const CLOUDINARY_API_SECRET = validateEnvVariables("CLOUDINARY_API_SECRET");
 
 export {
   ENVIRONMENT,
@@ -43,4 +46,7 @@ export {
   VERIFICATION_TOKEN_SECRET,
   ORIGIN_URL,
   AI_MODEL,
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET,
 };

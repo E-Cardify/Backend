@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import AppError from "../utils/AppError";
 import { clearAuthCookies } from "../utils/cookies";
 import { REFRESH_PATH } from "../utils/cookies";
+import { MulterError } from "multer";
 
 const handleZodError = (res: Response, err: ZodError) => {
   const errors = err.issues.map((err) => {
@@ -26,12 +27,23 @@ const handleAppError = (res: Response, err: AppError) => {
   });
 };
 
+const handleMulterError = (res: Response, err: MulterError) => {
+  res.status(BAD_REQUEST).json({
+    message: err.message,
+  });
+};
+
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   console.log(`Path: ${req.path}`);
+  console.log(`Error message: ${err.message}`);
   console.log(`Error: ${err}`);
 
   if (req.path === REFRESH_PATH) {
     clearAuthCookies(res);
+  }
+
+  if (err instanceof MulterError) {
+    return handleMulterError(res, err);
   }
 
   if (err instanceof AppError) {
