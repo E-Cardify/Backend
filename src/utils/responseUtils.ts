@@ -36,6 +36,7 @@ const formatCardInfoPublicDataResponse = (cardInfo: CardInfoDocument) => {
     userId: cardInfo.userId,
     createdAt: cardInfo.createdAt,
     updateAt: cardInfo.updatedAt,
+    avatar: cardInfo.avatarUrl,
   };
 };
 

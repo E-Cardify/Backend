@@ -6,6 +6,8 @@ export interface CardInfoDocument extends mongoose.Document {
   fields: FieldDocument[];
   userId: mongoose.Types.ObjectId;
   createdAt: Date;
+  avatarPublicId?: string;
+  avatarUrl?: string;
   updatedAt: Date;
 }
 
@@ -166,6 +168,14 @@ const CardInfoSchema = new Schema(
       ref: "User",
       required: true,
       index: true,
+    },
+    avatarUrl: {
+      type: String,
+      required: false,
+    },
+    avatarPublicId: {
+      type: String,
+      required: false,
     },
   },
   {
