@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { uploadCardInfoAvatarImageHandler } from "../../services/user.service";
+import { uploadCardInfoAvatarImageHandler } from "../../services/cardInfo.service";
 import { BAD_REQUEST, OK } from "../../constants/http";
 import { formatUserPrivateDataResponse } from "../../utils/responseUtils";
 import appAssert from "../../utils/appAssert";
