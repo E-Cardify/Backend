@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import { deleteCardInfoAvatarWhileCardInfoDeletion } from "../services/cardInfo.service";
 
 export interface CardInfoDocument extends mongoose.Document {
   information: InformationDocument;
@@ -180,6 +181,68 @@ const CardInfoSchema = new Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+CardInfoSchema.pre(
+  "deleteMany",
+  { document: false, query: true },
+  async function (next) {
+    const ids = this;
+    const filter = ids.getFilter();
+    const userId = filter["userId"];
+
+    const docs = await this.model.find({ userId: { $in: userId } });
+
+    for (const doc of docs) {
+      if (doc.information) {
+        await InformationModel.deleteOne({ _id: doc.information._id });
+      }
+
+      if (doc.design) {
+        await DesignModel.deleteOne({ _id: doc.design._id });
+      }
+
+      if (doc.fields && doc.fields.length) {
+        await FieldModel.deleteMany({
+          _id: { $in: doc.fields.map((field: any) => field._id) },
+        });
+      }
+
+      if (doc.avatarPublicId) {
+        await deleteCardInfoAvatarWhileCardInfoDeletion(doc.avatarPublicId);
+      }
+    }
+
+    next();
+  }
+);
+
+CardInfoSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    const doc = this as any;
+
+    if (doc.information) {
+      await InformationModel.deleteOne({ _id: doc.information._id });
+    }
+
+    if (doc.design) {
+      await DesignModel.deleteOne({ _id: doc.design._id });
+    }
+
+    if (doc.fields && doc.fields.length) {
+      await FieldModel.deleteMany({
+        _id: { $in: doc.fields.map((field: any) => field._id) },
+      });
+    }
+
+    if (doc.avatarPublicId) {
+      await deleteCardInfoAvatarWhileCardInfoDeletion(doc.avatarPublicId);
+    }
+
+    next();
   }
 );
 

@@ -115,6 +115,15 @@ async function uploadCardInfoAvatarImageHandler(
   return { user, file: newFile };
 }
 
+async function deleteCardInfoAvatarWhileCardInfoDeletion(
+  avatarPublicId: string
+) {
+  await deleteFromCloudinary(avatarPublicId);
+  await FileModel.deleteOne({
+    publicId: avatarPublicId,
+  });
+}
+
 async function deleteCardInfoAvatarImageHandler(
   user: UserDocument,
   cardInfo: CardInfoDocument
@@ -133,4 +142,8 @@ async function deleteCardInfoAvatarImageHandler(
   }
 }
 
-export { deleteCardInfoAvatarImageHandler, uploadCardInfoAvatarImageHandler };
+export {
+  deleteCardInfoAvatarImageHandler,
+  uploadCardInfoAvatarImageHandler,
+  deleteCardInfoAvatarWhileCardInfoDeletion,
+};
