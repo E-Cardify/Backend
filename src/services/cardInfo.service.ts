@@ -24,6 +24,7 @@ export type CreateCardInfoParams = {
     text: string;
   }[];
   user: UserDocument;
+  public?: boolean;
 };
 
 export const createCardInfo = async (data: CreateCardInfoParams) => {
@@ -45,6 +46,7 @@ export const createCardInfo = async (data: CreateCardInfoParams) => {
     design,
     fields,
     userId: user._id,
+    public: data.public || false,
   });
 
   user.cards.push(cardInfo._id as mongoose.Types.ObjectId);

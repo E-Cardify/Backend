@@ -30,3 +30,28 @@ export const authenticate = async (
   req.sessionId = payload.sessionId;
   next();
 };
+
+export const authenticateNonStrict = async (
+  req: Request & ProtectedRequest,
+  _: Response,
+  next: NextFunction
+) => {
+  const accessToken = req.cookies["accessToken"] as string | undefined;
+
+  if (!accessToken) {
+    next();
+    return;
+  }
+
+  const { error, payload } = verifyToken(accessToken);
+  appAssert(
+    payload,
+    UNAUTHORIZED,
+    error === "jwt expired" ? "Token expired" : "Invalid token",
+    AppErrorCode.InvalidAccessToken
+  );
+
+  req.userId = payload.userId;
+  req.sessionId = payload.sessionId;
+  next();
+};

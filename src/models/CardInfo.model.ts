@@ -10,6 +10,7 @@ export interface CardInfoDocument extends mongoose.Document {
   avatarPublicId?: string;
   avatarUrl?: string;
   updatedAt: Date;
+  public: boolean;
 }
 
 export interface InformationDocument extends mongoose.Document {
@@ -177,6 +178,11 @@ const CardInfoSchema = new Schema(
     avatarPublicId: {
       type: String,
       required: false,
+    },
+    public: {
+      type: Boolean,
+      required: true,
+      default: false,
     },
   },
   {

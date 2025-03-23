@@ -25,4 +25,9 @@ export const createCardInfoSchema = z.object({
       text: z.string().max(256),
     })
   ),
+  public: z.boolean().optional(),
+});
+
+export const changeCardVisibilitySchema = z.object({
+  public: z.boolean(),
 });

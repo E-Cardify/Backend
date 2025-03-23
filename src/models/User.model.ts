@@ -95,7 +95,7 @@ const UserSchema = new Schema<UserDocument>(
     },
     maxCards: {
       type: Number,
-      default: 3,
+      default: 1,
     },
     avatarUrl: {
       type: String,
