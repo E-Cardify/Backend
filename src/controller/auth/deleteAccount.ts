@@ -5,7 +5,6 @@ import { NOT_FOUND, OK, UNAUTHORIZED } from "../../constants/http";
 import appAssert from "../../utils/appAssert";
 import { DeleteAccountSchema } from "./auth.schemas";
 import { compareValue } from "../../utils/bcrypt";
-import { deleteUserAvatarImageHandler } from "../../services/user.service";
 
 const deleteAccount = async (
   req: Request & ProtectedRequest,
@@ -24,8 +23,6 @@ const deleteAccount = async (
   const isMatch = compareValue(password, user.password);
   appAssert(isMatch, UNAUTHORIZED, "Invalid email or password");
   appAssert(email === user.email, UNAUTHORIZED, "Invalid email or password");
-
-  await deleteUserAvatarImageHandler(user);
 
   await user.deleteOne();
 

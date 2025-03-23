@@ -10,13 +10,19 @@ const createCard = async (req: Request & ProtectedRequest, res: Response) => {
   const user = await UserModel.findById(req.userId);
   appAssert(user, NOT_FOUND, "User not found");
 
-  const { information, design, fields } = createCardInfoSchema.parse(req.body);
+  const {
+    information,
+    design,
+    fields,
+    public: isPublic,
+  } = createCardInfoSchema.parse(req.body);
 
   const { cardInfo } = await createCardInfo({
     information,
     design,
     fields,
     user,
+    public: isPublic || false,
   });
 
   res.status(CREATED).json(cardInfo);

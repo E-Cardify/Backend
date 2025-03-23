@@ -24,14 +24,12 @@ async function deleteUserAvatarImageHandler(user: UserDocument) {
   }
 }
 
-async function uploadAvatarImageHandler(
+async function uploadUserAvatarImageHandler(
   userId: Types.ObjectId,
   file: Express.Multer.File
 ) {
   const user = await UserModel.findById(userId);
   appAssert(user, NOT_FOUND, "User not found");
-
-  await deleteUserAvatarImageHandler(user);
 
   const isExtensionValid = validateImageFileExtension(file);
   appAssert(
@@ -39,6 +37,8 @@ async function uploadAvatarImageHandler(
     BAD_REQUEST,
     `Invalid file extension, supported: ${imageExtensions.join(", ")}`
   );
+
+  await deleteUserAvatarImageHandler(user);
 
   const { url, publicId } = await uploadToCloudinary(file.buffer);
 
@@ -66,4 +66,4 @@ async function uploadAvatarImageHandler(
   return { user, file: newFile };
 }
 
-export { uploadAvatarImageHandler, deleteUserAvatarImageHandler };
+export { uploadUserAvatarImageHandler, deleteUserAvatarImageHandler };

@@ -3,6 +3,8 @@ import { compareValue, hashValue } from "../utils/bcrypt";
 import UserLogModel, { UserLogDocument } from "./UserLog.model";
 import { UserLogType } from "../constants/userLogTypes";
 import CardInfoModel, { CardInfoDocument } from "./CardInfo.model";
+import { deleteUserAvatarImageHandler } from "../services/user.service";
+// import { deleteUserAvatarImageHandler } from "../services/user.service";
 
 export interface GetLogsParams {
   limit: number | undefined;
@@ -93,7 +95,7 @@ const UserSchema = new Schema<UserDocument>(
     },
     maxCards: {
       type: Number,
-      default: 3,
+      default: 1,
     },
     avatarUrl: {
       type: String,
@@ -111,6 +113,22 @@ const UserSchema = new Schema<UserDocument>(
   },
   {
     timestamps: true,
+  }
+);
+
+UserSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    const user = this as UserDocument;
+
+    await deleteUserAvatarImageHandler(user);
+    await UserLogModel.deleteMany({ userId: user._id });
+    await CardInfoModel.deleteMany({
+      userId: user._id,
+    });
+
+    next();
   }
 );
 
